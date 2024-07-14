@@ -29,6 +29,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib3
 from weakref import finalize
 
 import selenium.webdriver.chrome.service
@@ -853,6 +854,12 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
         ):
             self.service.process.kill()
 
+    def check_is_alive(self):
+        try:
+            url = self.current_url
+            return True
+        except urllib3.exceptions.MaxRetryError:
+            return False
 
 def find_chrome_executable():
     """
