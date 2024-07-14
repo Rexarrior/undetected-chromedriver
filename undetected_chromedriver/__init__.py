@@ -803,6 +803,8 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
         self.patcher = None
 
     def __getattribute__(self, item):
+        if item == "check_is_alive":
+            self.__class__.check_is_alive(self)
         if not super().__getattribute__("debug"):
             return super().__getattribute__(item)
         else:
@@ -854,7 +856,8 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
         ):
             self.service.process.kill()
 
-    def check_is_alive(self):
+    @classmethod
+    def check_is_alive(cls, self):
         try:
             url = self.current_url
             return True
