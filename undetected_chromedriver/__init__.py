@@ -458,6 +458,7 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
                 close_fds=IS_POSIX,
             )
             self.browser_pid = browser.pid
+            time.sleep(2)
 
 
         service = selenium.webdriver.chromium.service.ChromiumService(
