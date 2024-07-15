@@ -491,7 +491,7 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
             try:
                 os.kill(self.browser_pid, signal.SIGTERM)
                 time.sleep(1)
-                if  sys.platform == "win32":
+                if  sys.platform != "win32":
                     os.kill(self.browser_pid, signal.SIGKILL)
                 os.waitpid(self.browser_pid, 0)
             except (OSError, PermissionError) as e:
