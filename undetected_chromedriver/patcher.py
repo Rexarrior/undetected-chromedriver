@@ -352,7 +352,7 @@ class Patcher(object):
             if match_injected_codeblock:
                 target_bytes = match_injected_codeblock[0]
                 new_target_bytes = (
-                    b'{console.log("its me 1500!")}'.ljust(
+                    b'{console.log("1500 undetected chromedriver 1500!")}'.ljust(
                         len(target_bytes), b" "
                     )
                 )
