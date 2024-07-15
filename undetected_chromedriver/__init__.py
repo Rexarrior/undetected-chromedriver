@@ -15,6 +15,7 @@ by UltrafunkAmsterdam (https://github.com/ultrafunkamsterdam)
 
 """
 from __future__ import annotations
+import signal
 
 
 __version__ = "3.5.5"
@@ -450,15 +451,10 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
                 options.binary_location, *options.arguments
             )
         else:
-            browser = subprocess.Popen(
-                [options.binary_location, *options.arguments],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=IS_POSIX,
-            )
-            self.browser_pid = browser.pid
-            time.sleep(2)
+            self.popen_binary_location = options.binary_location
+            self.popen_args = options.arguments
+            self.browser_pid = None
+            self._rebern()
 
 
         service = selenium.webdriver.chromium.service.ChromiumService(
@@ -489,6 +485,30 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
 
         if headless or getattr(options, 'headless', None):
             self._configure_headless()
+
+    def _rebern(self):
+        if self.browser_pid:
+            try:
+                os.kill(self.browser_pid, signal.SIGTERM)
+                time.sleep(1)
+                if  sys.platform == "win32":
+                    os.kill(self.browser_pid, signal.SIGKILL)
+                os.waitpid(self.browser_pid, 0)
+            except (OSError, PermissionError) as e:
+                # Handle the exception if it occurs
+                pass
+        if self.popen_binary_location and self.popen_args:
+            browser = subprocess.Popen(
+                [self.popen_binary_location, *self.popen_args],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=IS_POSIX,
+            )
+            self.browser_pid = browser.pid
+            time.sleep(2)
+        else:
+            raise ValueError("popen_binary_location or popen_args is None")
 
     def _configure_headless(self):
         orig_get = self.get
@@ -859,11 +879,25 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
 
     @classmethod
     def check_is_alive(cls, self):
+        """
+        Checks if the instance of Chrome is alive by trying to get the current URL.
+
+        Returns:
+            bool: True if the instance is alive, False otherwise.
+        """
         try:
-            url = self.current_url
-            return True
+            if self is None:
+                raise ValueError("self is None")
+            return self.current_url is not None
         except urllib3.exceptions.MaxRetryError:
-            return False
+            try:
+                if self is None:
+                    raise ValueError("self is None")
+                cls._rebern(self)
+                return cls.current_url is not None
+            except Exception as e:
+                logger.debug(e)
+                return False
 
 def find_chrome_executable():
     """
