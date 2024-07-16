@@ -503,7 +503,7 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
     def _bern(self):
         if not self.popen_is_subprocess:
             self.browser_pid = start_detached(
-                self.popen_binary_location, *self.popen_argsrguments
+                self.popen_binary_location, *self.popen_args
             )
         else:
             browser = subprocess.Popen(
