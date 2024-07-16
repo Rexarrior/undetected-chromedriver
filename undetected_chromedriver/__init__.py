@@ -446,15 +446,12 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
         if not desired_capabilities:
             desired_capabilities = options.to_capabilities()
 
-        if not use_subprocess:
-            self.browser_pid = start_detached(
-                options.binary_location, *options.arguments
-            )
-        else:
-            self.popen_binary_location = options.binary_location
-            self.popen_args = options.arguments
-            self.browser_pid = None
-            self._bern()
+        
+        self.popen_binary_location = options.binary_location
+        self.popen_args = options.arguments
+        self.popen_is_subprocess = use_subprocess
+        self.browser_pid = None
+        self._bern()
 
 
         service = selenium.webdriver.chromium.service.ChromiumService(
@@ -504,14 +501,19 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
             raise ValueError("popen_binary_location or popen_args is None")
 
     def _bern(self):
-        browser = subprocess.Popen(
-                [self.popen_binary_location, *self.popen_args],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=IS_POSIX,
+        if not self.popen_is_subprocess:
+            self.browser_pid = start_detached(
+                self.popen_binary_location, *self.popen_argsrguments
             )
-        self.browser_pid = browser.pid
+        else:
+            browser = subprocess.Popen(
+                    [self.popen_binary_location, *self.popen_args],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=IS_POSIX,
+                )
+            self.browser_pid = browser.pid
 
     def _configure_headless(self):
         orig_get = self.get
